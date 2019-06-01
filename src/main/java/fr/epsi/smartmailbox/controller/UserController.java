@@ -87,4 +87,25 @@ public class UserController {
 
 		return jwtToken;
 	}
+
+	@PostMapping("/init")
+	public String Init()
+	{
+		String init = "";
+		if(userService.findByEmail("admin@contejonathan.net")==null)
+		{
+			Utilisateur utilisateur = new Utilisateur();
+			utilisateur.setFirstName("Jonathan");
+			utilisateur.setLastName("CONTE");
+			utilisateur.setEmail("admin@contejonathan.net");
+			utilisateur.setPassword("mydil34000");
+			userService.save(utilisateur);
+			init = "user created";
+		}
+		else
+		{
+			init = "user already created";
+		}
+		return init;
+	}
 }
