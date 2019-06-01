@@ -86,16 +86,24 @@ public class UserController {
 	}
 
 	@PostMapping("/init")
-	public String Init()
-	{
+	public String Init() throws NoSuchProviderException, NoSuchAlgorithmException {
 		String init = "";
+		Utilisateur userInDb = userService.findByEmail("admin@contejonathan.net");
+		if(userInDb!=null && userInDb.getRole()!= Utilisateur.Role.Admin)
+		{
+			userService.delete(userInDb);
+		}
+
 		if(userService.findByEmail("admin@contejonathan.net")==null)
 		{
 			Utilisateur utilisateur = new Utilisateur();
 			utilisateur.setFirstName("Jonathan");
 			utilisateur.setLastName("CONTE");
 			utilisateur.setEmail("admin@contejonathan.net");
-			utilisateur.setPassword("mydil34000");
+			byte[] salt = Func.getSalt();
+			utilisateur.setSalt(salt);
+			utilisateur.setPassword(Func.getSecurePassword("mydil34000", salt));
+			utilisateur.setRole(Utilisateur.Role.Admin);
 			userService.save(utilisateur);
 			init = "user created";
 		}
