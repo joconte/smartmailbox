@@ -68,14 +68,11 @@ public class UserController {
 		//String password = login.getPassword();
 		Utilisateur utilisateur = userService.findByEmail(email);
 
-		String password = Func.getSecurePassword(login.getPassword(),utilisateur.getSalt());
-
-
-
 		if (utilisateur == null) {
 			throw new ServletException("Utilisateur email not found.");
 		}
 
+		String password = Func.getSecurePassword(login.getPassword(),utilisateur.getSalt());
 		String pwd = utilisateur.getPassword();
 
 		if (!password.equals(pwd)) {
