@@ -186,6 +186,7 @@ public class UserController {
 			utilisateurInDb.setEnabled(true);
 			userService.save(utilisateurInDb);
 			toreturn="Utilisateur activé !";
+			verificationTokenRepository.delete(verificationToken);
 		}
 		return toreturn;
 	}
