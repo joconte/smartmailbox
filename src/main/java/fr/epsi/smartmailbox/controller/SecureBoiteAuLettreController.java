@@ -77,4 +77,26 @@ public class SecureBoiteAuLettreController {
         }
         return baltoken;
     }
+
+    @ApiOperation(value = "Permet de récupérer toutes les boites aux lettres, il faut etre connecté en administrateur.")
+    @GetMapping
+    public GenericObjectWithErrorModel<List<BoiteAuLettre>> getAllBAL(@RequestHeader("Authorization") String token)
+    {
+        GenericObjectWithErrorModel<List<BoiteAuLettre>> boiteAuLettreGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
+        Dictionary<String, List<String>> dictionary = new Hashtable<>();
+        String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
+        Utilisateur userFoundInDb = userService.findByEmail(username);
+        if(userFoundInDb!=null && userFoundInDb.getRole()== Utilisateur.Role.Admin)
+        {
+            boiteAuLettreGenericObjectWithErrorModel.setT(boiteAuLettreRepository.findAll());
+        }
+        else
+        {
+            List<String> strings = new ArrayList<>();
+            strings.add("Vous n'etes pas connecté en Admin.");
+            dictionary.put("Authorisation",strings);
+            boiteAuLettreGenericObjectWithErrorModel.setErrors(dictionary);
+        }
+        return boiteAuLettreGenericObjectWithErrorModel;
+    }
 }
