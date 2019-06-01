@@ -62,4 +62,18 @@ public class SecureBoiteAuLettreController {
         }
         return boiteAuLettreGenericObjectWithErrorModel;
     }
+
+    @GetMapping("/{numeroSerie}")
+    public String getBALToken(@RequestHeader("Authorization") String token,@PathVariable String numeroSerie)
+    {
+        String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
+        Utilisateur userFoundInDb = userService.findByEmail(username);
+        BoiteAuLettre boiteAuLettreFoundIndb = boiteAuLettreRepository.findByNumeroSerie(numeroSerie);
+        String baltoken="";
+        if(userFoundInDb!=null && userFoundInDb.getRole()== Utilisateur.Role.Admin && boiteAuLettreFoundIndb!=null)
+        {
+            baltoken = boiteAuLettreFoundIndb.getToken();
+        }
+        return baltoken;
+    }
 }
