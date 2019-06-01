@@ -63,6 +63,7 @@ public class SecureBoiteAuLettreController {
         return boiteAuLettreGenericObjectWithErrorModel;
     }
 
+    @ApiOperation(value = "Permet de récupérer le token d'une boite au lettre, il faut etre connecté en administrateur.")
     @GetMapping("/{numeroSerie}")
     public String getBALToken(@RequestHeader("Authorization") String token,@PathVariable String numeroSerie)
     {
