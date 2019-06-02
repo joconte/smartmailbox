@@ -30,8 +30,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @RequestMapping("/user")
 public class UserController {
 
-	//private final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
-	private final String siteAdresse = "http://192.168.1.17:8080";
+	private final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
+	//private final String siteAdresse = "http://192.168.1.17:8080";
 	@Autowired
 	private UtilisateurRepository userService;
 
@@ -96,11 +96,16 @@ public class UserController {
 			strings.add("Le mot de passe est obligatoire");
 			dictionary.put("password",strings);
 		}
-		if(userService.findByEmail(user.getEmail())!=null)
+		Utilisateur utilisateurInDb = userService.findByEmail(user.getEmail());
+		if(utilisateurInDb!=null && utilisateurInDb.isEnabled())
 		{
 			List<String> strings = new ArrayList<>();
 			strings.add("L'adresse email est déjà utilisée");
 			dictionary.put("email",strings);
+		}
+		else if(utilisateurInDb!=null && !utilisateurInDb.isEnabled())
+		{
+			userService.delete(utilisateurInDb);
 		}
 		return dictionary;
 	}
