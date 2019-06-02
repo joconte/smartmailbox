@@ -176,6 +176,7 @@ public class UserController {
 		return init;
 	}
 
+	@ApiOperation(value = "Permet de vérifier l'adresse email lors de la création de compte")
 	@GetMapping("/verify/{token}")
 	public String verifyUser(@PathVariable String token)
 	{
@@ -196,6 +197,7 @@ public class UserController {
 		return toreturn;
 	}
 
+	@ApiOperation(value = "Permet d'envoyer un lien par mail pour changer le mot de passe")
 	@PostMapping("/forgotPassword")
 	public GenericObjectWithErrorModel<String> resetPassword(@RequestBody String email)
 	{

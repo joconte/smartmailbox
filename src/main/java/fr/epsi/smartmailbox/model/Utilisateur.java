@@ -31,7 +31,7 @@ public class Utilisateur {
 	@JsonIgnore
 	private byte[] salt;
 
-	@JsonIgnore
+
 	private Role role;
 
 	@OneToMany
@@ -95,10 +95,12 @@ public class Utilisateur {
 		this.salt = salt;
 	}
 
+	@JsonProperty
 	public Role getRole() {
 		return role;
 	}
 
+	@JsonIgnore
 	public void setRole(Role role) {
 		this.role = role;
 	}
