@@ -30,8 +30,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @RequestMapping("/user")
 public class UserController {
 
-	private final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
-
+	//private final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
+	private final String siteAdresse = "http://192.168.1.17:8080";
 	@Autowired
 	private UtilisateurRepository userService;
 
@@ -189,5 +189,40 @@ public class UserController {
 			verificationTokenRepository.delete(verificationToken);
 		}
 		return toreturn;
+	}
+
+	@PostMapping("/forgotPassword")
+	public String resetPassword(@RequestBody String email,HttpServletRequest request)
+	{
+		String toReturn="";
+		try {
+			Utilisateur utilisateurInDb = userService.findByEmail(email);
+			byte[] randomToken = Func.getSalt();
+			VerificationToken verificationToken = new VerificationToken();
+			verificationToken.setToken(randomToken.toString());
+			verificationToken.setUser(utilisateurInDb);
+			VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
+			emailService.sendSimpleMessage(utilisateurInDb.getEmail(),"Changement de mot de passe", siteAdresse + request.getRequestURI() + "/changePassword/"+ verificationTokenSaved.getToken());
+			toReturn="Email envoyé !";
+		}
+		catch (Exception e)
+		{
+			toReturn= "Erreur";
+		}
+		return toReturn;
+	}
+
+	@GetMapping("/changePassword/{token}")
+	public String changePassword(@PathVariable String token) throws NoSuchProviderException, NoSuchAlgorithmException {
+		Utilisateur utilisateurFoundInDB = verificationTokenRepository.findByToken(token).getUser();
+		byte[] salt = Func.getSalt();
+		utilisateurFoundInDB.setSalt(salt);
+		byte[] temporarypass = Func.getSalt();
+		utilisateurFoundInDB.setPassword(Func.getSecurePassword(temporarypass.toString(), salt));
+		utilisateurFoundInDB.setRole(Utilisateur.Role.Client);
+		userService.save(utilisateurFoundInDB);
+		VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
+		verificationTokenRepository.delete(verificationToken);
+		return "Mot de passe temporaire : " + temporarypass.toString();
 	}
 }
