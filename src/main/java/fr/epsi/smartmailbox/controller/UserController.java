@@ -30,8 +30,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @RequestMapping("/user")
 public class UserController {
 
-	private final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
-	//private final String siteAdresse = "http://192.168.1.17:8080";
+
+
 	@Autowired
 	private UtilisateurRepository userService;
 
@@ -60,7 +60,7 @@ public class UserController {
 			verificationToken.setToken(randomToken.toString());
 			verificationToken.setUser(userSaved);
 			VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
-			emailService.sendSimpleMessage(userSaved.getEmail(),"Token de vérification", siteAdresse + request.getRequestURI() + "/verify/"+ verificationTokenSaved.getToken());
+			emailService.sendSimpleMessage(userSaved.getEmail(),"Token de vérification", Func.siteAdresse + "/user/verify/"+ verificationTokenSaved.getToken());
 		}
 		else
 		{
@@ -197,9 +197,10 @@ public class UserController {
 	}
 
 	@PostMapping("/forgotPassword")
-	public String resetPassword(@RequestBody String email,HttpServletRequest request)
+	public GenericObjectWithErrorModel<String> resetPassword(@RequestBody String email)
 	{
-		String toReturn="";
+		GenericObjectWithErrorModel<String> stringGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
+		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		try {
 			Utilisateur utilisateurInDb = userService.findByEmail(email);
 			byte[] randomToken = Func.getSalt();
@@ -207,15 +208,19 @@ public class UserController {
 			verificationToken.setToken(randomToken.toString());
 			verificationToken.setUser(utilisateurInDb);
 			VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
-			emailService.sendSimpleMessage(utilisateurInDb.getEmail(),"Changement de mot de passe", siteAdresse + request.getRequestURI() + "/changePassword/"+ verificationTokenSaved.getToken());
-			toReturn="Email envoyé !";
+			emailService.sendSimpleMessage(utilisateurInDb.getEmail(),"Changement de mot de passe", Func.siteAdresse + "/user/changePassword/"+ verificationTokenSaved.getToken());
+			stringGenericObjectWithErrorModel.setT("Email envoyé !");
 		}
 		catch (Exception e)
 		{
-			toReturn= "Erreur";
+			List<String> strings = new ArrayList<>();
+			strings.add("Email non trouvée");
+			dictionary.put("Erreur",strings);
+			stringGenericObjectWithErrorModel.setErrors(dictionary);
 		}
-		return toReturn;
+		return stringGenericObjectWithErrorModel;
 	}
+
 
 	@GetMapping("/changePassword/{token}")
 	public String changePassword(@PathVariable String token) throws NoSuchProviderException, NoSuchAlgorithmException {

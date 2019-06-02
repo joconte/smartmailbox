@@ -61,4 +61,7 @@ public class Func {
         String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
         return email.matches(regex);
     }
+
+    //public static final String siteAdresse = "http://192.168.1.17:8080";
+    public static final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
 }

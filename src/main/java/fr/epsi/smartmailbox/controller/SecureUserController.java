@@ -1,5 +1,9 @@
 package fr.epsi.smartmailbox.controller;
 
+import fr.epsi.smartmailbox.component.EmailServiceImpl;
+import fr.epsi.smartmailbox.func.Func;
+import fr.epsi.smartmailbox.model.VerificationToken;
+import fr.epsi.smartmailbox.repository.VerificationTokenRepository;
 import io.jsonwebtoken.Jwts;
 import fr.epsi.smartmailbox.model.BoiteAuLettre;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
@@ -8,9 +12,12 @@ import fr.epsi.smartmailbox.repository.BoiteAuLettreRepository;
 import fr.epsi.smartmailbox.repository.UtilisateurRepository;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -27,6 +34,12 @@ public class SecureUserController {
 
 	@Autowired
 	private BoiteAuLettreRepository boiteAuLettreRepository;
+
+	@Autowired
+	private VerificationTokenRepository verificationTokenRepository;
+
+	@Autowired
+	EmailServiceImpl emailService;
 
 	@ApiOperation(value = "Permet de vérifier que le token de connexion est bien valide, facultatif.")
 	@GetMapping("/token")
@@ -140,6 +153,93 @@ public class SecureUserController {
 			utilisateurGenericObjectWithErrorModel.setT(userFoundInDb);
 		}
 		return utilisateurGenericObjectWithErrorModel;
+	}
+
+	@ApiOperation(value = "Permet de modifier les informations de l'utilisateur connecté.")
+	@PutMapping
+	public GenericObjectWithErrorModel<Utilisateur> updateUtilisateur(@RequestHeader("Authorization") String token, @RequestBody Utilisateur user) throws NoSuchProviderException, NoSuchAlgorithmException {
+		String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
+		GenericObjectWithErrorModel<Utilisateur> utilisateurGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
+		Dictionary<String, List<String>> dictionary = new Hashtable<>();
+		Utilisateur userFoundInDb = userService.findByEmail(username);
+
+		if(userFoundInDb!=null)
+		{
+			dictionary = UserValidationForUpdate(user,userFoundInDb.getEmail());
+			if(dictionary.isEmpty())
+			{
+				userFoundInDb.setFirstName(user.getFirstName());
+				userFoundInDb.setLastName(user.getLastName());
+				boolean needValidationByEmail = false;
+				if(!userFoundInDb.getEmail().equals(user.getEmail()))
+				{
+					userFoundInDb.setEmail(user.getEmail());
+					needValidationByEmail=true;
+				}
+
+				if(user.getPassword()!=null && user.getPassword()!="")
+				{
+					byte[] salt = Func.getSalt();
+					userFoundInDb.setSalt(salt);
+					userFoundInDb.setPassword(Func.getSecurePassword(user.getPassword(), salt));
+				}
+				Utilisateur userSaved = userService.save(userFoundInDb);
+				utilisateurGenericObjectWithErrorModel.setT(userSaved);
+				if(needValidationByEmail)
+				{
+					byte[] randomToken = Func.getSalt();
+					VerificationToken verificationToken = new VerificationToken();
+					verificationToken.setToken(randomToken.toString());
+					verificationToken.setUser(userSaved);
+					VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
+					emailService.sendSimpleMessage(userSaved.getEmail(),"Token de vérification", Func.siteAdresse + "/user/verify/"+ verificationTokenSaved.getToken());
+
+				}
+			}
+		}
+		else
+		{
+			List<String> strings = new ArrayList<>();
+			strings.add("Utilisateur non trouvé");
+			dictionary.put("Utilisateur",strings);
+		}
+		utilisateurGenericObjectWithErrorModel.setErrors(dictionary);
+		return utilisateurGenericObjectWithErrorModel;
+	}
+
+	public Dictionary<String, List<String>> UserValidationForUpdate(Utilisateur user, String email)
+	{
+		Dictionary<String, List<String>> dictionary = new Hashtable<>();
+		if(user.getFirstName().isEmpty())
+		{
+			List<String> strings = new ArrayList<>();
+			strings.add("Le prénom est obligatoire");
+			dictionary.put("firstName",strings);
+		}
+		if(user.getLastName().isEmpty())
+		{
+			List<String> strings = new ArrayList<>();
+			strings.add("Le nom est obligatoire");
+			dictionary.put("lastName",strings);
+		}
+		if(!Func.isValidEmail(user.getEmail()))
+		{
+			List<String> strings = new ArrayList<>();
+			strings.add("L'adresse email n'est pas valide");
+			dictionary.put("email",strings);
+		}
+		Utilisateur utilisateurInDb = userService.findByEmail(user.getEmail());
+		if(utilisateurInDb!=null && utilisateurInDb.isEnabled() && utilisateurInDb.getEmail()!=email)
+		{
+			List<String> strings = new ArrayList<>();
+			strings.add("L'adresse email est déjà utilisée");
+			dictionary.put("email",strings);
+		}
+		else if(utilisateurInDb!=null && !utilisateurInDb.isEnabled())
+		{
+			userService.delete(utilisateurInDb);
+		}
+		return dictionary;
 	}
 
 }
