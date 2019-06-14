@@ -1,17 +1,12 @@
 package fr.epsi.smartmailbox;
 
 import fr.epsi.smartmailbox.config.JwtFilter;
-import fr.epsi.smartmailbox.model.Utilisateur;
-import fr.epsi.smartmailbox.repository.UtilisateurRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.stereotype.Repository;
-
 import java.util.Properties;
 
 @SpringBootApplication

@@ -31,7 +31,7 @@ public class CourrierController {
     {
         GenericObjectWithErrorModel<BoiteAuLettre> courrierGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
         Dictionary<String, List<String>> dictionary = new Hashtable<>();
-        if(boiteAuLettreRepository.findByToken(courrier.getBoiteAuLettre().getToken()).size()>0)
+        if(boiteAuLettreRepository.findByToken(courrier.getBoiteAuLettre().getToken()).isEmpty())
         {
             courrier.setDateReception(Calendar.getInstance().getTime());
             courrier.setVu(false);

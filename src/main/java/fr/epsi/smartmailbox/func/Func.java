@@ -63,5 +63,13 @@ public class Func {
     }
 
     //public static final String siteAdresse = "http://192.168.1.17:8080";
-    public static final String siteAdresse = "https://smartmailbox-epsi.herokuapp.com";
+
+    public static final String siteAdresse =  "https://smartmailbox-epsi.herokuapp.com";
+
+    public static final String secretKey = "secretkey";
+
+    public static final String userNotFoundInDb = "L'utilisateur n'a pas été trouvé en base.";
+
+    public static final String adminAccount = "admin@contejonathan.net";
+
 }

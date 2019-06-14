@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-@Api( description="API publique, pour se connecter ou s'enregistrer")
+@Api( "API publique, pour se connecter ou s'enregistrer")
 @CrossOrigin(origins = "http://localhost", maxAge = 3600)
 @RestController
 @RequestMapping("/user")
@@ -45,8 +45,7 @@ public class UserController {
 	@PostMapping
 	public GenericObjectWithErrorModel<Utilisateur> register(@RequestBody Utilisateur user, HttpServletRequest request) throws NoSuchProviderException, NoSuchAlgorithmException {
 		GenericObjectWithErrorModel<Utilisateur> userGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
-		Dictionary<String, List<String>> dictionary = new Hashtable<>();
-		dictionary = UserValidation(user);
+		Dictionary<String, List<String>> dictionary = UserValidation(user);
 		if(dictionary.isEmpty())
 		{
 			byte[] salt = Func.getSalt();
@@ -111,7 +110,7 @@ public class UserController {
 	}
 
 	@ApiOperation(value = "Permet de se connecter, l'API répond par un token de type Bearer qu'il faudra passer dans le header par la suite sur toutes les API sécurisées.")
-	@RequestMapping(value = "/login", method = RequestMethod.POST)
+	@PostMapping(value = "/login")
 	public String login(@RequestBody Utilisateur login) throws ServletException {
 
 		String jwtToken = "";
@@ -121,7 +120,6 @@ public class UserController {
 		}
 
 		String email = login.getEmail();
-		//String password = login.getPassword();
 		Utilisateur utilisateur = userService.findByEmail(email);
 
 		if (utilisateur == null) {
@@ -149,18 +147,18 @@ public class UserController {
 	@PostMapping("/init")
 	public String Init() throws NoSuchProviderException, NoSuchAlgorithmException {
 		String init = "";
-		Utilisateur userInDb = userService.findByEmail("admin@contejonathan.net");
+		Utilisateur userInDb = userService.findByEmail(Func.adminAccount);
 		if((userInDb!=null && userInDb.getRole()!= Utilisateur.Role.Admin) || (userInDb!=null && !userInDb.isEnabled()))
 		{
 			userService.delete(userInDb);
 		}
 
-		if(userService.findByEmail("admin@contejonathan.net")==null)
+		if(userService.findByEmail(Func.adminAccount)==null)
 		{
 			Utilisateur utilisateur = new Utilisateur();
 			utilisateur.setFirstName("Jonathan");
 			utilisateur.setLastName("CONTE");
-			utilisateur.setEmail("admin@contejonathan.net");
+			utilisateur.setEmail(Func.adminAccount);
 			byte[] salt = Func.getSalt();
 			utilisateur.setSalt(salt);
 			utilisateur.setPassword(Func.getSecurePassword("mydil34000", salt));

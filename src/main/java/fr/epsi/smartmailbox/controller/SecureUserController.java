@@ -12,7 +12,6 @@ import fr.epsi.smartmailbox.repository.BoiteAuLettreRepository;
 import fr.epsi.smartmailbox.repository.UtilisateurRepository;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +23,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 
-@Api( description="API sécurisée pour éffectuer des actions sur l'utilisateur, il faut un token d'authentification.")
+@Api( "API sécurisée pour éffectuer des actions sur l'utilisateur, il faut un token d'authentification.")
 @RestController
 @RequestMapping("/secure/user")
 public class SecureUserController {
@@ -51,7 +50,7 @@ public class SecureUserController {
 	@GetMapping
 	public GenericObjectWithErrorModel<List<Utilisateur>> getAllUser(@RequestHeader("Authorization") String token)
 	{
-		String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
+		String username = Jwts.parser().setSigningKey(Func.secretKey).parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
 		GenericObjectWithErrorModel<List<Utilisateur>> listGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
 		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		Utilisateur userFoundInDb = userService.findByEmail(username);
@@ -77,7 +76,7 @@ public class SecureUserController {
 		Utilisateur userFoundInDb = userService.findByEmail(username);
 		if(userFoundInDb==null)
 		{
-			return "L'utilisateur n'a pas été trouvé en base.";
+			return Func.userNotFoundInDb;
 		}
 		else
 		{
