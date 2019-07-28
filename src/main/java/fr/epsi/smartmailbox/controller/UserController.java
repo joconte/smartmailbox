@@ -144,6 +144,43 @@ public class UserController {
 		return jwtToken;
 	}
 
+	@ApiOperation(value = "Permet de se connecter, l'API répond par un token de type Bearer qu'il faudra passer dans le header par la suite sur toutes les API sécurisées.")
+	@PostMapping(value = "/login-angular")
+	public VerificationToken loginForAngular(@RequestBody Utilisateur login) throws ServletException {
+
+		String jwtToken = "";
+
+		if (login.getEmail() == null || login.getPassword() == null) {
+			throw new ServletException("Please fill in username and password");
+		}
+
+		String email = login.getEmail();
+		Utilisateur utilisateur = userService.findByEmail(email);
+
+		if (utilisateur == null) {
+			throw new ServletException("Utilisateur email not found.");
+		}
+
+		String password = Func.getSecurePassword(login.getPassword(),utilisateur.getSalt());
+		String pwd = utilisateur.getPassword();
+
+		if (!password.equals(pwd)) {
+			throw new ServletException("Invalid login. Please check your name and password.");
+		}
+
+		if(!utilisateur.isEnabled())
+		{
+			throw new ServletException("L'utilisateur n'est pas activé !");
+		}
+
+		jwtToken = Jwts.builder().setSubject(email).claim("roles", "utilisateur").setIssuedAt(new Date())
+				.signWith(SignatureAlgorithm.HS256, "secretkey").compact();
+
+		VerificationToken verificationToken = new VerificationToken();
+		verificationToken.setToken(jwtToken);
+		return verificationToken;
+	}
+
 	@PostMapping("/init")
 	public String Init() throws NoSuchProviderException, NoSuchAlgorithmException {
 		String init = "";
