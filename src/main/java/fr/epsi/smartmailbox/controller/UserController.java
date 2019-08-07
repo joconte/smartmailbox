@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import fr.epsi.smartmailbox.component.EmailServiceImpl;
 import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
-import fr.epsi.smartmailbox.model.Link.UtilisateurLink;
 import fr.epsi.smartmailbox.model.Received.UtilisateurRegister;
 import fr.epsi.smartmailbox.model.Sent.UtilisateurSent;
 import fr.epsi.smartmailbox.model.Utilisateur;
