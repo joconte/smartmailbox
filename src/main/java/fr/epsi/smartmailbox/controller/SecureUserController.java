@@ -25,7 +25,7 @@ import java.util.List;
 
 @Api( "API sécurisée pour éffectuer des actions sur l'utilisateur, il faut un token d'authentification.")
 @RestController
-@RequestMapping("/secure/user")
+@RequestMapping(Func.routeSecureUserController)
 public class SecureUserController {
 
 	@Autowired

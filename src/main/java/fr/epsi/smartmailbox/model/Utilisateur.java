@@ -6,6 +6,7 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.epsi.smartmailbox.model.Received.UtilisateurRegister;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
@@ -124,6 +125,14 @@ public class Utilisateur {
 	public Utilisateur() {
 		super();
 		this.enabled=false;
+	}
+
+	public Utilisateur(UtilisateurRegister utilisateurRegister) {
+		this();
+		this.firstName = utilisateurRegister.getFirstName();
+		this.lastName = utilisateurRegister.getLastName();
+		this.email = utilisateurRegister.getEmail();
+		this.password = utilisateurRegister.getPassword();
 	}
 
 	public boolean isEnabled() {

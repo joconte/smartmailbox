@@ -1,5 +1,6 @@
 package fr.epsi.smartmailbox.controller;
 
+import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.Courrier;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
 import fr.epsi.smartmailbox.model.Utilisateur;
@@ -18,7 +19,7 @@ import java.util.List;
 
 @Api( description="API sécurisée pour éffectuer des actions sur les courriers, il faut un token d'authentification.")
 @RestController
-@RequestMapping("/secure/courrier")
+@RequestMapping(Func.routeSecureCourrierController)
 public class SecureCourrierController {
 
     @Autowired

@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletRequest;
 import fr.epsi.smartmailbox.component.EmailServiceImpl;
 import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
+import fr.epsi.smartmailbox.model.Link.UtilisateurLink;
+import fr.epsi.smartmailbox.model.Received.UtilisateurRegister;
+import fr.epsi.smartmailbox.model.Sent.UtilisateurSent;
 import fr.epsi.smartmailbox.model.Utilisateur;
 import fr.epsi.smartmailbox.model.VerificationToken;
 import fr.epsi.smartmailbox.repository.UtilisateurRepository;
@@ -27,10 +30,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Api( "API publique, pour se connecter ou s'enregistrer")
 @CrossOrigin(origins = "http://localhost", maxAge = 3600)
 @RestController
-@RequestMapping("/user")
+@RequestMapping(Func.routeUserController)
 public class UserController {
-
-
 
 	@Autowired
 	private UtilisateurRepository userService;
@@ -43,9 +44,10 @@ public class UserController {
 
 	@ApiOperation(value = "Permet de s'enregistrer")
 	@PostMapping
-	public GenericObjectWithErrorModel<Utilisateur> register(@RequestBody Utilisateur user, HttpServletRequest request) throws NoSuchProviderException, NoSuchAlgorithmException {
-		GenericObjectWithErrorModel<Utilisateur> userGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
-		Dictionary<String, List<String>> dictionary = UserValidation(user);
+	public Object register(@RequestBody UtilisateurRegister userRegister, HttpServletRequest request) throws NoSuchProviderException, NoSuchAlgorithmException {
+		Object returnObj;
+		Dictionary<String, List<String>> dictionary = UserValidation(userRegister);
+		Utilisateur user = new Utilisateur(userRegister);
 		if(dictionary.isEmpty())
 		{
 			byte[] salt = Func.getSalt();
@@ -53,7 +55,7 @@ public class UserController {
 			user.setPassword(Func.getSecurePassword(user.getPassword(), salt));
 			user.setRole(Utilisateur.Role.Client);
 			Utilisateur userSaved = userService.save(user);
-			userGenericObjectWithErrorModel.setT(userSaved);
+			returnObj = new UtilisateurSent(userSaved);
 			byte[] randomToken = Func.getSalt();
 			VerificationToken verificationToken = new VerificationToken();
 			verificationToken.setToken(randomToken.toString());
@@ -63,12 +65,12 @@ public class UserController {
 		}
 		else
 		{
-			userGenericObjectWithErrorModel.setErrors(dictionary);
+			returnObj = dictionary;
 		}
-		return userGenericObjectWithErrorModel;
+		return returnObj;
 	}
 
-	public Dictionary<String, List<String>> UserValidation(Utilisateur user)
+	public Dictionary<String, List<String>> UserValidation(UtilisateurRegister user)
 	{
 		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		if(user.getFirstName().isEmpty())
@@ -101,10 +103,6 @@ public class UserController {
 			List<String> strings = new ArrayList<>();
 			strings.add("L'adresse email est déjà utilisée");
 			dictionary.put("email",strings);
-		}
-		else if(utilisateurInDb!=null && !utilisateurInDb.isEnabled())
-		{
-			userService.delete(utilisateurInDb);
 		}
 		return dictionary;
 	}

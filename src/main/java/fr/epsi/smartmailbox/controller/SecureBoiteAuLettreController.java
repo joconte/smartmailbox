@@ -20,7 +20,7 @@ import java.util.List;
 
 @Api( description="API sécurisée pour effectuer des actions sur les boites au lettre, il faut un token d'authentification.")
 @RestController
-@RequestMapping("/secure/BAL")
+@RequestMapping(Func.routeSecureBoiteAuLettreController)
 public class SecureBoiteAuLettreController {
 
     @Autowired

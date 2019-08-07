@@ -1,6 +1,7 @@
 package fr.epsi.smartmailbox.controller;
 
 
+import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.BoiteAuLettre;
 import fr.epsi.smartmailbox.model.Courrier;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
@@ -16,7 +17,7 @@ import java.util.*;
 @Api( description="API publique pour effectuer des actions sur les courriers.")
 @CrossOrigin
 @RestController
-@RequestMapping("/courrier")
+@RequestMapping(Func.routeCourrierController)
 public class CourrierController {
 
     @Autowired
