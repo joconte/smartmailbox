@@ -78,6 +78,7 @@ public class Func {
     public static final String routeUserControllerVerifyEmail = "/verify/{token}";
     public static final String routeUserControllerChangePassword = "/changePassword/{token}";
     public static final String routeSecureUserController =  "/secure/user";
+    public static final String routeSecureUserControllerGetUserConnected = "/me";
     public static final String routeSecureCourrierController =  "/secure/courrier";
     public static final String routeSecureBoiteAuLettreController =  "/secure/BAL";
     public static final String routeSecureBoiteAuLettreControllerGetTokenByNumSerie = "/{numeroSerie}";

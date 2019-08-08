@@ -2,6 +2,7 @@ package fr.epsi.smartmailbox.controller;
 
 import fr.epsi.smartmailbox.component.EmailServiceImpl;
 import fr.epsi.smartmailbox.func.Func;
+import fr.epsi.smartmailbox.model.Sent.UtilisateurSent;
 import fr.epsi.smartmailbox.model.VerificationToken;
 import fr.epsi.smartmailbox.repository.VerificationTokenRepository;
 import io.jsonwebtoken.Jwts;
@@ -129,29 +130,27 @@ public class SecureUserController {
 		return utilisateurGenericObjectWithErrorModel;
 	}
 
-	@ApiOperation(value = "Permet de récupérer les informations de l'utilisateur connecté.")
-	@RequestMapping("/me")
+	@ApiOperation(value = "Allow to get connected user information.")
+	@RequestMapping(Func.routeSecureUserControllerGetUserConnected)
 	@GetMapping
-	public GenericObjectWithErrorModel<Utilisateur> getConnectedUser(@RequestHeader("Authorization") String token)
+	public Object getConnectedUser(@RequestHeader("Authorization") String token)
 	{
-		GenericObjectWithErrorModel<Utilisateur> utilisateurGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
 		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
-
 		Utilisateur userFoundInDb = userService.findByEmail(username);
-
+		Object objToReturn;
 		if(userFoundInDb==null)
 		{
 			List<String> strings = new ArrayList<>();
-			strings.add("L'utilisateur n'a pas été trouvé en base.");
-			dictionary.put("Utilisateur",strings);
-			utilisateurGenericObjectWithErrorModel.setErrors(dictionary);
+			strings.add("User not found.");
+			dictionary.put("User",strings);
+			objToReturn = dictionary;
 		}
 		else
 		{
-			utilisateurGenericObjectWithErrorModel.setT(userFoundInDb);
+			objToReturn = new UtilisateurSent(userFoundInDb);
 		}
-		return utilisateurGenericObjectWithErrorModel;
+		return objToReturn;
 	}
 
 	@ApiOperation(value = "Permet de modifier les informations de l'utilisateur connecté.")
