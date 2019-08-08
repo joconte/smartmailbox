@@ -93,7 +93,7 @@ public class Func {
     public static final String routeSecureBoiteAuLettreControllerGetAll = "/all";
     public static final String routeSecureBoiteAuLettreControllerGetMailBoxById = "/{idMailBox}";
     public static final String routeCourrierController = "/courrier";
-    public static final String routeSecureCourrierControllerGetMailByMailBoxId = "?idMailBox={idMailBox}";
+    public static final String routeSecureCourrierControllerGetMailByMailBoxId = "/idMailBox/{idMailBox}";
 
 
 }

@@ -5,6 +5,8 @@ import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.BoiteAuLettre;
 import fr.epsi.smartmailbox.model.Courrier;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
+import fr.epsi.smartmailbox.model.Received.CourrierPost;
+import fr.epsi.smartmailbox.model.Sent.CourrierSent;
 import fr.epsi.smartmailbox.repository.BoiteAuLettreRepository;
 import fr.epsi.smartmailbox.repository.CourrierRepository;
 import io.swagger.annotations.Api;
@@ -28,28 +30,31 @@ public class CourrierController {
 
     @ApiOperation(value = "Permet de créer un courrier")
     @PostMapping
-    public GenericObjectWithErrorModel<BoiteAuLettre> postCourrier(@RequestBody Courrier courrier)
+    public Object postCourrier(@RequestBody CourrierPost courrierPost)
     {
-        GenericObjectWithErrorModel<BoiteAuLettre> courrierGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
         Dictionary<String, List<String>> dictionary = new Hashtable<>();
-        if(boiteAuLettreRepository.findByToken(courrier.getBoiteAuLettre().getToken()).isEmpty())
+        Object objToReturn;
+        if(boiteAuLettreRepository.findByToken(courrierPost.getToken())!=null)
         {
+            Courrier courrier = new Courrier();
             courrier.setDateReception(Calendar.getInstance().getTime());
             courrier.setVu(false);
-            BoiteAuLettre boiteAuLettreFoundInDb = boiteAuLettreRepository.findByToken(courrier.getBoiteAuLettre().getToken()).get(0);
+            BoiteAuLettre boiteAuLettreFoundInDb = boiteAuLettreRepository.findByToken(courrierPost.getToken()).get(0);
             courrier.setBoiteAuLettre(boiteAuLettreFoundInDb);
             Courrier courrierSaved = courrierRepository.save(courrier);
             boiteAuLettreFoundInDb.addCourrier(courrierSaved);
             boiteAuLettreFoundInDb.setLastActivity(courrierSaved.getDateReception());
-            courrierGenericObjectWithErrorModel.setT(boiteAuLettreRepository.save(boiteAuLettreFoundInDb));
+            boiteAuLettreRepository.save(boiteAuLettreFoundInDb);
+            Courrier courrierWithBAL = courrierRepository.findOne(courrierSaved.getId());
+            objToReturn = new CourrierSent(courrierWithBAL);
         }
         else
         {
             List<String> strings = new ArrayList<>();
             strings.add("La boite au lettre n'est pas reconnue");
             dictionary.put("BoiteAuLettre",strings);
-            courrierGenericObjectWithErrorModel.setErrors(dictionary);
+            objToReturn = dictionary;
         }
-        return courrierGenericObjectWithErrorModel;
+        return objToReturn;
     }
 }
