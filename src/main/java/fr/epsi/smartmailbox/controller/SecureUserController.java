@@ -2,6 +2,7 @@ package fr.epsi.smartmailbox.controller;
 
 import fr.epsi.smartmailbox.component.EmailServiceImpl;
 import fr.epsi.smartmailbox.func.Func;
+import fr.epsi.smartmailbox.model.Received.UtilisateurRegister;
 import fr.epsi.smartmailbox.model.Sent.UtilisateurSent;
 import fr.epsi.smartmailbox.model.VerificationToken;
 import fr.epsi.smartmailbox.repository.VerificationTokenRepository;
@@ -153,56 +154,52 @@ public class SecureUserController {
 		return objToReturn;
 	}
 
-	@ApiOperation(value = "Permet de modifier les informations de l'utilisateur connecté.")
+	@ApiOperation(value = "Allow to edit connected user informations.")
 	@PutMapping
-	public GenericObjectWithErrorModel<Utilisateur> updateUtilisateur(@RequestHeader("Authorization") String token, @RequestBody Utilisateur user) throws NoSuchProviderException, NoSuchAlgorithmException {
-		String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
-		GenericObjectWithErrorModel<Utilisateur> utilisateurGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
+	public Object updateUtilisateur(@RequestHeader("Authorization") String token, @RequestBody UtilisateurRegister userMin) throws NoSuchProviderException, NoSuchAlgorithmException {
+		String username = Func.getUserNameByToken(token);
 		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		Utilisateur userFoundInDb = userService.findByEmail(username);
-
-		if(userFoundInDb!=null)
-		{
+		Object objToReturn;
+		Utilisateur user = new Utilisateur(userMin);
+		if(userFoundInDb!=null) {
 			dictionary = UserValidationForUpdate(user,userFoundInDb.getEmail());
-			if(dictionary.isEmpty())
-			{
+			if(dictionary.isEmpty()) {
 				userFoundInDb.setFirstName(user.getFirstName());
 				userFoundInDb.setLastName(user.getLastName());
 				boolean needValidationByEmail = false;
-				if(!userFoundInDb.getEmail().equals(user.getEmail()))
-				{
+				if(!userFoundInDb.getEmail().equals(user.getEmail())) {
 					userFoundInDb.setEmail(user.getEmail());
 					needValidationByEmail=true;
 				}
 
-				if(user.getPassword()!=null && user.getPassword()!="")
-				{
+				if(user.getPassword()!=null && user.getPassword()!="") {
 					byte[] salt = Func.getSalt();
 					userFoundInDb.setSalt(salt);
 					userFoundInDb.setPassword(Func.getSecurePassword(user.getPassword(), salt));
 				}
 				Utilisateur userSaved = userService.save(userFoundInDb);
-				utilisateurGenericObjectWithErrorModel.setT(userSaved);
-				if(needValidationByEmail)
-				{
+				objToReturn = new UtilisateurSent(userSaved);
+				if(needValidationByEmail) {
 					byte[] randomToken = Func.getSalt();
 					VerificationToken verificationToken = new VerificationToken();
 					verificationToken.setToken(randomToken.toString());
 					verificationToken.setUser(userSaved);
 					VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
-					emailService.sendSimpleMessage(userSaved.getEmail(),"Token de vérification", Func.siteAdresse + "/user/verify/"+ verificationTokenSaved.getToken());
-
+					emailService.sendSimpleMessage(userSaved.getEmail(),"Verification token", Func.siteAdresse + "/user/verify/"+ verificationTokenSaved.getToken());
 				}
 			}
+			else {
+				objToReturn = dictionary;
+			}
 		}
-		else
-		{
+		else {
 			List<String> strings = new ArrayList<>();
-			strings.add("Utilisateur non trouvé");
-			dictionary.put("Utilisateur",strings);
+			strings.add("User not found.");
+			dictionary.put("user",strings);
+			objToReturn = dictionary;
 		}
-		utilisateurGenericObjectWithErrorModel.setErrors(dictionary);
-		return utilisateurGenericObjectWithErrorModel;
+		return objToReturn;
 	}
 
 	public Dictionary<String, List<String>> UserValidationForUpdate(Utilisateur user, String email)
