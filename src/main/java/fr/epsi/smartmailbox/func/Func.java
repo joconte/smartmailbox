@@ -73,10 +73,18 @@ public class Func {
     public static final String adminAccount = "admin@contejonathan.net";
 
     public static final String routeUserController = "/user";
+    public static final String routeUserControllerLogin = "/login";
+    public static final String routeUserControllerForgotPassword = "/forgotPassword";
+    public static final String routeUserControllerVerifyEmail = "/verify/{token}";
+    public static final String routeUserControllerChangePassword = "/changePassword/{token}";
     public static final String routeSecureUserController =  "/secure/user";
     public static final String routeSecureCourrierController =  "/secure/courrier";
     public static final String routeSecureBoiteAuLettreController =  "/secure/BAL";
+    public static final String routeSecureBoiteAuLettreControllerGetTokenByNumSerie = "/{numeroSerie}";
+    public static final String routeSecureBoiteAuLettreControllerGetAll = "/all";
+    public static final String routeSecureBoiteAuLettreControllerGetMailBoxById = "/{idMailBox}";
     public static final String routeCourrierController = "/courrier";
+    public static final String routeSecureCourrierControllerGetMailByMailBoxId = "?idMailBox={idMailBox}";
 
 
 }

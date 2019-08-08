@@ -4,9 +4,11 @@ package fr.epsi.smartmailbox.controller;
 import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.BoiteAuLettre;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
+import fr.epsi.smartmailbox.model.Sent.BoiteAuLettreSent;
 import fr.epsi.smartmailbox.model.Utilisateur;
 import fr.epsi.smartmailbox.repository.BoiteAuLettreRepository;
 import fr.epsi.smartmailbox.repository.UtilisateurRepository;
+import fr.epsi.smartmailbox.service.BoiteAuLettreService;
 import io.jsonwebtoken.Jwts;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -28,6 +30,9 @@ public class SecureBoiteAuLettreController {
 
     @Autowired
     private BoiteAuLettreRepository boiteAuLettreRepository;
+
+    @Autowired
+    private BoiteAuLettreService boiteAuLettreService;
 
     @ApiOperation(value = "Permet de créer une boite au lettre, il faut etre connecté en administrateur.")
     @PostMapping
@@ -64,7 +69,7 @@ public class SecureBoiteAuLettreController {
     }
 
     @ApiOperation(value = "Permet de récupérer le token d'une boite au lettre, il faut etre connecté en administrateur.")
-    @GetMapping("/{numeroSerie}")
+    @GetMapping(Func.routeSecureBoiteAuLettreControllerGetTokenByNumSerie)
     public String getBALToken(@RequestHeader("Authorization") String token,@PathVariable String numeroSerie)
     {
         String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
@@ -78,25 +83,37 @@ public class SecureBoiteAuLettreController {
         return baltoken;
     }
 
-    @ApiOperation(value = "Permet de récupérer toutes les boites aux lettres, il faut etre connecté en administrateur.")
-    @GetMapping
-    public GenericObjectWithErrorModel<List<BoiteAuLettre>> getAllBAL(@RequestHeader("Authorization") String token)
+    @ApiOperation(value = "Allow to get all mailboxs, admin rights are needed.")
+    @GetMapping(Func.routeSecureBoiteAuLettreControllerGetAll)
+    public Object getAllBAL(@RequestHeader("Authorization") String token)
     {
-        GenericObjectWithErrorModel<List<BoiteAuLettre>> boiteAuLettreGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
         Dictionary<String, List<String>> dictionary = new Hashtable<>();
         String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
         Utilisateur userFoundInDb = userService.findByEmail(username);
+        Object objToReturn;
         if(userFoundInDb!=null && userFoundInDb.getRole()== Utilisateur.Role.Admin)
         {
-            boiteAuLettreGenericObjectWithErrorModel.setT(boiteAuLettreRepository.findAll());
+            List<BoiteAuLettre> boiteAuLettres = boiteAuLettreRepository.findAll();
+            List<BoiteAuLettreSent> boiteAuLettreSents = new ArrayList<>();
+            for(BoiteAuLettre boiteAuLettre : boiteAuLettres) {
+                boiteAuLettreSents.add(new BoiteAuLettreSent(boiteAuLettre));
+            }
+            objToReturn = boiteAuLettreSents;
         }
         else
         {
             List<String> strings = new ArrayList<>();
-            strings.add("Vous n'etes pas connecté en Admin.");
+            strings.add("Admin rights are needed.");
             dictionary.put("Authorisation",strings);
-            boiteAuLettreGenericObjectWithErrorModel.setErrors(dictionary);
+            objToReturn = dictionary;
         }
-        return boiteAuLettreGenericObjectWithErrorModel;
+        return objToReturn;
     }
+
+    @ApiOperation(value = "Allow to get a mailbox by id.")
+    @GetMapping(Func.routeSecureBoiteAuLettreControllerGetMailBoxById)
+    public Object getMailboxById(@RequestHeader("Authorization") String token, @PathVariable Long idMailBox){
+        return boiteAuLettreService.getMailboxById(token,idMailBox);
+    }
+
 }

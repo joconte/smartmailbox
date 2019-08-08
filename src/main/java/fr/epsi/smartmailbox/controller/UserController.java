@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import fr.epsi.smartmailbox.component.EmailServiceImpl;
 import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
+import fr.epsi.smartmailbox.model.Received.UtilisateurLogin;
 import fr.epsi.smartmailbox.model.Received.UtilisateurRegister;
 import fr.epsi.smartmailbox.model.Sent.UtilisateurSent;
 import fr.epsi.smartmailbox.model.Utilisateur;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-@Api( "API publique, pour se connecter ou s'enregistrer")
+@Api( "public API, for sign in or sign up")
 @CrossOrigin(origins = "http://localhost", maxAge = 3600)
 @RestController
 @RequestMapping(Func.routeUserController)
@@ -41,7 +42,7 @@ public class UserController {
 	@Autowired
 	EmailServiceImpl emailService;
 
-	@ApiOperation(value = "Permet de s'enregistrer")
+	@ApiOperation(value = "Allow to sign up")
 	@PostMapping
 	public Object register(@RequestBody UtilisateurRegister userRegister, HttpServletRequest request) throws NoSuchProviderException, NoSuchAlgorithmException {
 		Object returnObj;
@@ -60,7 +61,7 @@ public class UserController {
 			verificationToken.setToken(randomToken.toString());
 			verificationToken.setUser(userSaved);
 			VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
-			emailService.sendSimpleMessage(userSaved.getEmail(),"Token de vérification", Func.siteAdresse + "/user/verify/"+ verificationTokenSaved.getToken());
+			emailService.sendSimpleMessage(userSaved.getEmail(),"Verification token", Func.siteAdresse + "/user/verify/"+ verificationTokenSaved.getToken());
 		}
 		else
 		{
@@ -75,104 +76,89 @@ public class UserController {
 		if(user.getFirstName().isEmpty())
 		{
 			List<String> strings = new ArrayList<>();
-			strings.add("Le prénom est obligatoire");
+			strings.add("First name is required.");
 			dictionary.put("firstName",strings);
 		}
 		if(user.getLastName().isEmpty())
 		{
 			List<String> strings = new ArrayList<>();
-			strings.add("Le nom est obligatoire");
+			strings.add("Last name is required.");
 			dictionary.put("lastName",strings);
 		}
 		if(!Func.isValidEmail(user.getEmail()))
 		{
 			List<String> strings = new ArrayList<>();
-			strings.add("L'adresse email n'est pas valide");
+			strings.add("Email address is invalid.");
 			dictionary.put("email",strings);
 		}
 		if(user.getPassword().isEmpty())
 		{
 			List<String> strings = new ArrayList<>();
-			strings.add("Le mot de passe est obligatoire");
+			strings.add("Password is required.");
 			dictionary.put("password",strings);
 		}
 		Utilisateur utilisateurInDb = userService.findByEmail(user.getEmail());
 		if(utilisateurInDb!=null && utilisateurInDb.isEnabled())
 		{
 			List<String> strings = new ArrayList<>();
-			strings.add("L'adresse email est déjà utilisée");
+			strings.add("Email already in use.");
 			dictionary.put("email",strings);
 		}
 		return dictionary;
 	}
 
 	@ApiOperation(value = "Permet de se connecter, l'API répond par un token de type Bearer qu'il faudra passer dans le header par la suite sur toutes les API sécurisées.")
-	@PostMapping(value = "/login")
-	public String login(@RequestBody Utilisateur login) throws ServletException {
+	@PostMapping(value = Func.routeUserControllerLogin)
+	public Object login(@RequestBody UtilisateurLogin login) throws ServletException {
 
+		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		String jwtToken = "";
 
-		if (login.getEmail() == null || login.getPassword() == null) {
-			throw new ServletException("Please fill in username and password");
+		if (login.getPassword() == null || login.getEmail() == null) {
+			if (login.getPassword() == null) {
+				List<String> strings = new ArrayList<>();
+				strings.add("Password is required.");
+				dictionary.put("password",strings);
+			}
+			if (login.getEmail() == null) {
+				List<String> strings = new ArrayList<>();
+				strings.add("Email is required.");
+				dictionary.put("email",strings);
+			}
+			return dictionary;
 		}
+
 
 		String email = login.getEmail();
 		Utilisateur utilisateur = userService.findByEmail(email);
 
 		if (utilisateur == null) {
-			throw new ServletException("Utilisateur email not found.");
+			List<String> strings = new ArrayList<>();
+			strings.add("No user registered under this email.");
+			dictionary.put("email",strings);
+			return dictionary;
 		}
 
 		String password = Func.getSecurePassword(login.getPassword(),utilisateur.getSalt());
 		String pwd = utilisateur.getPassword();
 
 		if (!password.equals(pwd)) {
-			throw new ServletException("Invalid login. Please check your name and password.");
+			List<String> strings = new ArrayList<>();
+			strings.add("Invalid login. Please check your email and password.");
+			dictionary.put("email",strings);
+			return dictionary;
 		}
 
 		if(!utilisateur.isEnabled())
 		{
-			throw new ServletException("L'utilisateur n'est pas activé !");
+			List<String> strings = new ArrayList<>();
+			strings.add("User not activated, please check your email to confirm your account.");
+			dictionary.put("email",strings);
+			return dictionary;
 		}
 
 		jwtToken = Jwts.builder().setSubject(email).claim("roles", "utilisateur").setIssuedAt(new Date())
 				.signWith(SignatureAlgorithm.HS256, "secretkey").compact();
-
-		return jwtToken;
-	}
-
-	@ApiOperation(value = "Permet de se connecter, l'API répond par un token de type Bearer qu'il faudra passer dans le header par la suite sur toutes les API sécurisées.")
-	@PostMapping(value = "/login-angular")
-	public VerificationToken loginForAngular(@RequestBody Utilisateur login) throws ServletException {
-
-		String jwtToken = "";
-
-		if (login.getEmail() == null || login.getPassword() == null) {
-			throw new ServletException("Please fill in username and password");
-		}
-
-		String email = login.getEmail();
-		Utilisateur utilisateur = userService.findByEmail(email);
-
-		if (utilisateur == null) {
-			throw new ServletException("Utilisateur email not found.");
-		}
-
-		String password = Func.getSecurePassword(login.getPassword(),utilisateur.getSalt());
-		String pwd = utilisateur.getPassword();
-
-		if (!password.equals(pwd)) {
-			throw new ServletException("Invalid login. Please check your name and password.");
-		}
-
-		if(!utilisateur.isEnabled())
-		{
-			throw new ServletException("L'utilisateur n'est pas activé !");
-		}
-
-		jwtToken = Jwts.builder().setSubject(email).claim("roles", "utilisateur").setIssuedAt(new Date())
-				.signWith(SignatureAlgorithm.HS256, "secretkey").compact();
-
 		VerificationToken verificationToken = new VerificationToken();
 		verificationToken.setToken(jwtToken);
 		return verificationToken;
@@ -208,32 +194,31 @@ public class UserController {
 		return init;
 	}
 
-	@ApiOperation(value = "Permet de vérifier l'adresse email lors de la création de compte")
-	@GetMapping("/verify/{token}")
+	@ApiOperation(value = "Allow to verify email address when creating account")
+	@GetMapping(Func.routeUserControllerVerifyEmail)
 	public String verifyUser(@PathVariable String token)
 	{
 		String toreturn = "";
 		VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
 		if(verificationToken==null)
 		{
-			toreturn="Erreur le token n'est pas bon";
+			toreturn="Error, token is invalid";
 		}
 		else
 		{
 			Utilisateur utilisateurInDb = userService.findOne(verificationToken.getUser().getUserId());
 			utilisateurInDb.setEnabled(true);
 			userService.save(utilisateurInDb);
-			toreturn="Utilisateur activé !";
+			toreturn="User activated !";
 			verificationTokenRepository.delete(verificationToken);
 		}
 		return toreturn;
 	}
 
-	@ApiOperation(value = "Permet d'envoyer un lien par mail pour changer le mot de passe")
-	@PostMapping("/forgotPassword")
-	public GenericObjectWithErrorModel<String> resetPassword(@RequestBody String email)
+	@ApiOperation(value = "Send a link to account email to change password.")
+	@PostMapping(Func.routeUserControllerForgotPassword)
+	public Object resetPassword(@RequestBody String email)
 	{
-		GenericObjectWithErrorModel<String> stringGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
 		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		try {
 			Utilisateur utilisateurInDb = userService.findByEmail(email);
@@ -242,21 +227,20 @@ public class UserController {
 			verificationToken.setToken(randomToken.toString());
 			verificationToken.setUser(utilisateurInDb);
 			VerificationToken verificationTokenSaved = verificationTokenRepository.save(verificationToken);
-			emailService.sendSimpleMessage(utilisateurInDb.getEmail(),"Changement de mot de passe", Func.siteAdresse + "/user/changePassword/"+ verificationTokenSaved.getToken());
-			stringGenericObjectWithErrorModel.setT("Email envoyé !");
+			emailService.sendSimpleMessage(utilisateurInDb.getEmail(),"Change password request", Func.siteAdresse + "/user/changePassword/"+ verificationTokenSaved.getToken());
+			return "Mail sent !";
 		}
 		catch (Exception e)
 		{
 			List<String> strings = new ArrayList<>();
 			strings.add("Email non trouvée");
-			dictionary.put("Erreur",strings);
-			stringGenericObjectWithErrorModel.setErrors(dictionary);
+			dictionary.put("Error",strings);
+			return dictionary;
 		}
-		return stringGenericObjectWithErrorModel;
 	}
 
 
-	@GetMapping("/changePassword/{token}")
+	@GetMapping(Func.routeUserControllerChangePassword)
 	public String changePassword(@PathVariable String token) throws NoSuchProviderException, NoSuchAlgorithmException {
 		Utilisateur utilisateurFoundInDB = verificationTokenRepository.findByToken(token).getUser();
 		byte[] salt = Func.getSalt();

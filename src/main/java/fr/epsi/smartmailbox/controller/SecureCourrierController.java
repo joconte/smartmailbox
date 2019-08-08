@@ -3,9 +3,11 @@ package fr.epsi.smartmailbox.controller;
 import fr.epsi.smartmailbox.func.Func;
 import fr.epsi.smartmailbox.model.Courrier;
 import fr.epsi.smartmailbox.model.GenericObjectWithErrorModel;
+import fr.epsi.smartmailbox.model.Sent.CourrierSent;
 import fr.epsi.smartmailbox.model.Utilisateur;
 import fr.epsi.smartmailbox.repository.CourrierRepository;
 import fr.epsi.smartmailbox.repository.UtilisateurRepository;
+import fr.epsi.smartmailbox.service.BoiteAuLettreService;
 import io.jsonwebtoken.Jwts;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -27,6 +29,9 @@ public class SecureCourrierController {
 
     @Autowired
     private UtilisateurRepository userService;
+
+    @Autowired
+    private BoiteAuLettreService boiteAuLettreService;
 
     @ApiOperation(value = "Permet de mettre à jour un courrier par id à 'Vu'")
     @PutMapping("/{id}")
@@ -65,4 +70,20 @@ public class SecureCourrierController {
         return utilisateurGenericObjectWithErrorModel;
     }
 
+    @ApiOperation(value = "Allow to get mails by mailbox id")
+    @GetMapping(Func.routeSecureCourrierControllerGetMailByMailBoxId)
+    public Object getMailByMailBoxId(@RequestHeader("Authorization") String token, @PathVariable Long idMailBox) {
+        Object obj = boiteAuLettreService.getMailboxById(token,idMailBox);
+        if(obj instanceof Dictionary) {
+            return obj;
+        }
+        List<Courrier> courriers = courrierRepository.findAll();
+        List<CourrierSent> courrierSents = new ArrayList<>();
+        for(Courrier courrier : courriers) {
+            if(courrier.getBoiteAuLettre().getId()==idMailBox){
+                courrierSents.add(new CourrierSent(courrier));
+            }
+        }
+        return courrierSents;
+    }
 }
