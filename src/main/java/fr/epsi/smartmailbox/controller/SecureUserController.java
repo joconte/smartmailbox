@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
@@ -156,7 +157,7 @@ public class SecureUserController {
 
 	@ApiOperation(value = "Allow to edit connected user informations.")
 	@PutMapping
-	public Object updateUtilisateur(@RequestHeader("Authorization") String token, @RequestBody UtilisateurRegister userMin) throws NoSuchProviderException, NoSuchAlgorithmException {
+	public Object updateUtilisateur(@RequestHeader("Authorization") String token, @RequestBody UtilisateurRegister userMin, HttpServletResponse response) throws NoSuchProviderException, NoSuchAlgorithmException {
 		String username = Func.getUserNameByToken(token);
 		Dictionary<String, List<String>> dictionary = new Hashtable<>();
 		Utilisateur userFoundInDb = userService.findByEmail(username);
@@ -191,6 +192,7 @@ public class SecureUserController {
 			}
 			else {
 				objToReturn = dictionary;
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			}
 		}
 		else {
@@ -198,6 +200,7 @@ public class SecureUserController {
 			strings.add("User not found.");
 			dictionary.put("user",strings);
 			objToReturn = dictionary;
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		}
 		return objToReturn;
 	}

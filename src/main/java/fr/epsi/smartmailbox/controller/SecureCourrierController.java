@@ -33,41 +33,38 @@ public class SecureCourrierController {
     @Autowired
     private BoiteAuLettreService boiteAuLettreService;
 
-    @ApiOperation(value = "Permet de mettre à jour un courrier par id à 'Vu'")
+    @ApiOperation(value = "Allow to indicate a mail is 'seen'.")
     @PutMapping("/{id}")
-    public GenericObjectWithErrorModel<Courrier> updateCourrierVu(@RequestHeader("Authorization") String token, @PathVariable Long id)
+    public Object updateCourrierVu(@RequestHeader("Authorization") String token, @PathVariable Long id)
     {
-        GenericObjectWithErrorModel<Courrier> utilisateurGenericObjectWithErrorModel = new GenericObjectWithErrorModel<>();
         Dictionary<String, List<String>> dictionary = new Hashtable<>();
-        String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
-
+        String username = Func.getUserNameByToken(token);
         Utilisateur userFoundInDb = userService.findByEmail(username);
-
+        Object objToReturn;
         if(userFoundInDb==null)
         {
             List<String> strings = new ArrayList<>();
-            strings.add("L'utilisateur n'a pas été trouvé en base.");
-            dictionary.put("Utilisateur",strings);
-            utilisateurGenericObjectWithErrorModel.setErrors(dictionary);
+            strings.add("User not found.");
+            dictionary.put("User",strings);
+            objToReturn = dictionary;
         }
         else
         {
             Courrier courrierFoundInDb = courrierRepository.findOne(id);
-
             if(courrierFoundInDb==null)
             {
                 List<String> strings = new ArrayList<>();
                 strings.add("Le courrier n'a pas été trouvé en base.");
                 dictionary.put("Courrier",strings);
-                utilisateurGenericObjectWithErrorModel.setErrors(dictionary);
+                objToReturn = dictionary;
             }
             else
             {
                 courrierFoundInDb.setVu(true);
-                utilisateurGenericObjectWithErrorModel.setT(courrierRepository.save(courrierFoundInDb));
+                objToReturn = new CourrierSent(courrierFoundInDb);
             }
         }
-        return utilisateurGenericObjectWithErrorModel;
+        return objToReturn;
     }
 
     @ApiOperation(value = "Allow to get mails by mailbox id")
