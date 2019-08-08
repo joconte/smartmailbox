@@ -1,6 +1,10 @@
 package fr.epsi.smartmailbox.func;
 
 
+import fr.epsi.smartmailbox.model.Utilisateur;
+import fr.epsi.smartmailbox.repository.UtilisateurRepository;
+import io.jsonwebtoken.Jwts;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -62,6 +66,10 @@ public class Func {
         return email.matches(regex);
     }
 
+    public static String getUserNameByToken(String token) {
+        return Jwts.parser().setSigningKey(Func.secretKey).parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
+    }
+
     //public static final String siteAdresse = "http://192.168.1.17:8080";
 
     public static final String siteAdresse =  "https://smartmailbox-epsi.herokuapp.com";
@@ -81,7 +89,7 @@ public class Func {
     public static final String routeSecureUserControllerGetUserConnected = "/me";
     public static final String routeSecureCourrierController =  "/secure/courrier";
     public static final String routeSecureBoiteAuLettreController =  "/secure/BAL";
-    public static final String routeSecureBoiteAuLettreControllerGetTokenByNumSerie = "/{numeroSerie}";
+    public static final String routeSecureBoiteAuLettreControllerGetTokenByNumSerie = "/serialNumber/{serialNumber}";
     public static final String routeSecureBoiteAuLettreControllerGetAll = "/all";
     public static final String routeSecureBoiteAuLettreControllerGetMailBoxById = "/{idMailBox}";
     public static final String routeCourrierController = "/courrier";

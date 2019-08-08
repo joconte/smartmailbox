@@ -3,6 +3,7 @@ package fr.epsi.smartmailbox.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.epsi.smartmailbox.model.Received.BoiteAuLettrePost;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -79,6 +80,15 @@ public class BoiteAuLettre {
 
     public void setNumeroSerie(String numeroSerie) {
         this.numeroSerie = numeroSerie;
+    }
+
+    public BoiteAuLettre() {
+
+    }
+
+    public BoiteAuLettre(BoiteAuLettrePost boiteAuLettrePost) {
+        this.description = boiteAuLettrePost.getDescription();
+        this.numeroSerie = boiteAuLettrePost.getNumeroSerie();
     }
 }
 
