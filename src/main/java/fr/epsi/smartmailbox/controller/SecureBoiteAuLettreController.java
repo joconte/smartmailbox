@@ -116,4 +116,21 @@ public class SecureBoiteAuLettreController {
         return boiteAuLettreService.getMailboxById(token,idMailBox);
     }
 
+    @ApiOperation(value = "Allow to get connected user mailboxs")
+    @GetMapping()
+    public Object getMailboxs(@RequestHeader("Authorization") String token) {
+        Dictionary<String, List<String>> dictionary = new Hashtable<>();
+        String username = Jwts.parser().setSigningKey("secretkey").parseClaimsJws(token.split(" ")[1]).getBody().getSubject();
+        Utilisateur userFoundInDb = userService.findByEmail(username);
+        Object objToReturn;
+        List<BoiteAuLettre> boiteAuLettres = boiteAuLettreRepository.findAll();
+        List<BoiteAuLettreSent> boiteAuLettreSents = new ArrayList<>();
+        for(BoiteAuLettre boiteAuLettre : boiteAuLettres) {
+            if(userFoundInDb.getBoiteAuLettres().contains(boiteAuLettre)) {
+                boiteAuLettreSents.add(new BoiteAuLettreSent(boiteAuLettre));
+            }
+        }
+        return boiteAuLettreSents;
+    }
+
 }
