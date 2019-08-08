@@ -55,6 +55,6 @@ public class CourrierSent {
         this.Id = courrier.getId();
         this.vu = courrier.isVu();
         this.dateReception = courrier.getDateReception();
-        this.boiteAuLettre = Func.siteAdresse + Func.routeSecureBoiteAuLettreController + String.format(Func.routeSecureBoiteAuLettreControllerGetMailBoxById.replace("{idMailBox}","{0}"),courrier.getBoiteAuLettre().getId());
+        this.boiteAuLettre = Func.siteAdresse + Func.routeSecureBoiteAuLettreController + String.format(Func.routeSecureBoiteAuLettreControllerGetMailBoxById.replace("{idMailBox}","{%1$s}"),courrier.getBoiteAuLettre().getId());
     }
 }
