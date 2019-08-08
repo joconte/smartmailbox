@@ -66,6 +66,6 @@ public class BoiteAuLettreSent {
         this.numeroSerie = boiteAuLettre.getNumeroSerie();
         this.description = boiteAuLettre.getDescription();
         this.lastActivity = boiteAuLettre.getLastActivity();
-        this.courriers = Func.siteAdresse + Func.routeSecureCourrierController + String.format(Func.routeSecureCourrierControllerGetMailByMailBoxId.replace("{idMailBox}","{%1$s}"),boiteAuLettre.getId());
+        this.courriers = Func.siteAdresse + Func.routeSecureCourrierController + String.format(Func.routeSecureCourrierControllerGetMailByMailBoxId.replace("{idMailBox}","%1$s"),boiteAuLettre.getId());
     }
 }
