@@ -61,6 +61,7 @@ public class SecureCourrierController {
             else
             {
                 courrierFoundInDb.setVu(true);
+                courrierFoundInDb = courrierRepository.save(courrierFoundInDb);
                 objToReturn = new CourrierSent(courrierFoundInDb);
             }
         }
